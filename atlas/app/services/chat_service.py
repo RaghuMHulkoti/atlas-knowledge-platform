@@ -1,0 +1,1 @@
+"""\nModule: chat_service\n"""\n\nclass ChatserviceStub:\n    pass\n\ndef placeholder():\n    pass\n

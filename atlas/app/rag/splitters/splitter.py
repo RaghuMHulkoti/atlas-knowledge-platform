@@ -1,0 +1,1 @@
+"""\nModule: splitter\n"""\n\nclass SplitterStub:\n    pass\n\ndef placeholder():\n    pass\n

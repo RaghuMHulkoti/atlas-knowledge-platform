@@ -1,0 +1,1 @@
+"""\nModule: file_utils\n"""\n\nclass FileutilsStub:\n    pass\n\ndef placeholder():\n    pass\n

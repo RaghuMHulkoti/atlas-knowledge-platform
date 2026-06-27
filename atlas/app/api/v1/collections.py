@@ -1,0 +1,1 @@
+"""\nModule: collections\n"""\n\nclass CollectionsStub:\n    pass\n\ndef placeholder():\n    pass\n

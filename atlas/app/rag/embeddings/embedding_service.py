@@ -1,0 +1,1 @@
+"""\nModule: embedding_service\n"""\n\nclass EmbeddingserviceStub:\n    pass\n\ndef placeholder():\n    pass\n

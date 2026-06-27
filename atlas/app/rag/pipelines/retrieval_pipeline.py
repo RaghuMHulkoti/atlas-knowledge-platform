@@ -1,0 +1,1 @@
+"""\nModule: retrieval_pipeline\n"""\n\nclass RetrievalpipelineStub:\n    pass\n\ndef placeholder():\n    pass\n

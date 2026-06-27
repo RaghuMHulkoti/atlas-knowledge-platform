@@ -1,0 +1,1 @@
+"""\nModule: metadata\n"""\n\nclass MetadataStub:\n    pass\n\ndef placeholder():\n    pass\n

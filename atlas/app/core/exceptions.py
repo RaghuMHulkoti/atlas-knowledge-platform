@@ -1,0 +1,1 @@
+"""\nModule: exceptions\n"""\n\nclass ExceptionsStub:\n    pass\n\ndef placeholder():\n    pass\n

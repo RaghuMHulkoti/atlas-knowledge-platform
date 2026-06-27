@@ -1,0 +1,1 @@
+"""\nModule: main\n"""\n\nclass MainStub:\n    pass\n\ndef placeholder():\n    pass\n

@@ -1,0 +1,1 @@
+"""\nModule: connector\n"""\n\nclass ConnectorStub:\n    pass\n\ndef placeholder():\n    pass\n

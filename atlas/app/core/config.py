@@ -1,0 +1,1 @@
+"""\nModule: config\n"""\n\nclass ConfigStub:\n    pass\n\ndef placeholder():\n    pass\n

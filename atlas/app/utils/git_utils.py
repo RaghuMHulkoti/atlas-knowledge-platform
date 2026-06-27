@@ -1,0 +1,1 @@
+"""\nModule: git_utils\n"""\n\nclass GitutilsStub:\n    pass\n\ndef placeholder():\n    pass\n

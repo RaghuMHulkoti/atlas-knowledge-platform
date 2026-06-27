@@ -1,0 +1,1 @@
+"""\nModule: document\n"""\n\nclass DocumentStub:\n    pass\n\ndef placeholder():\n    pass\n
