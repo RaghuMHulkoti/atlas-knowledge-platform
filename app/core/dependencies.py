@@ -8,7 +8,7 @@ from langchain_core.embeddings import Embeddings
 from app.core.config import Settings, get_settings
 from app.infrastructure.llm.base import BaseLLM
 from app.infrastructure.llm.openrouter import OpenRouterLLM
-from app.ai.embeddings.embedding_service import GoogleEmbeddingsService
+from app.ai.embeddings.provider import GoogleEmbeddingProvider
 from app.infrastructure.vectorstore.base import BaseVectorStore
 
 # from app.infrastructure.vectorstore.chroma import ChromaStore
@@ -28,7 +28,7 @@ def get_llm() -> BaseLLM:
 
 @lru_cache
 def get_embeddings() -> Embeddings:
-    return GoogleEmbeddingsService().get_embeddings()
+    return GoogleEmbeddingProvider()
 
 
 # @lru_cache

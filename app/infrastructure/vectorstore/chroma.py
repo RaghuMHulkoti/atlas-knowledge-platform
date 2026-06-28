@@ -40,3 +40,25 @@ class ChromaVectorStore(BaseVectorStore):
             return True
         except Exception:
             return False
+
+    def upsert(
+        self,
+        collection_name: str,
+        ids: list[str],
+        documents: list[str],
+        embeddings: list[list[float]],
+        metadatas: list[dict],
+    ) -> None:
+        """
+        Upsert chunks with their embeddings into a ChromaDB collection.
+
+        Uses collection.upsert() which creates or updates records by ID,
+        making repeated ingestion of the same repository fully idempotent.
+        """
+        collection = self.get_or_create_collection(collection_name)
+        collection.upsert(
+            ids=ids,
+            documents=documents,
+            embeddings=embeddings,
+            metadatas=metadatas,
+        )

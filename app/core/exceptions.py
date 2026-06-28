@@ -18,6 +18,10 @@ class LLMException(AtlasException):
     """Raised when the LLM call fails."""
 
 
+class IndexingException(AtlasException):
+    """Raised when document chunking, embedding, or vector store writes fail."""
+
+
 async def atlas_exception_handler(
     request: Request,
     exc: AtlasException,
