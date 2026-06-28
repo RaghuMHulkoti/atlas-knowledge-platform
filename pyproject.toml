@@ -31,3 +31,6 @@ dev = [
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+
+[tool.black]
+target-version = ["py311"]
