@@ -1,1 +1,0 @@
-"""\nModule: state\n"""\n\nclass StateStub:\n    pass\n\ndef placeholder():\n    pass\n

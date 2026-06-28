@@ -1,1 +1,0 @@
-"""\nModule: upload_request\n"""\n\nclass UploadrequestStub:\n    pass\n\ndef placeholder():\n    pass\n

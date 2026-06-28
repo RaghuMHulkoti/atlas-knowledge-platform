@@ -1,1 +1,0 @@
-"""\nModule: response_generator\n"""\n\nclass ResponsegeneratorStub:\n    pass\n\ndef placeholder():\n    pass\n

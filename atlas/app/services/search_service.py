@@ -1,1 +1,0 @@
-"""\nModule: search_service\n"""\n\nclass SearchserviceStub:\n    pass\n\ndef placeholder():\n    pass\n

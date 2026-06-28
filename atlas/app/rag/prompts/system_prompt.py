@@ -1,1 +1,0 @@
-"""\nModule: system_prompt\n"""\n\nclass SystempromptStub:\n    pass\n\ndef placeholder():\n    pass\n

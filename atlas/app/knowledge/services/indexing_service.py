@@ -1,1 +1,0 @@
-"""\nModule: indexing_service\n"""\n\nclass IndexingserviceStub:\n    pass\n\ndef placeholder():\n    pass\n

@@ -1,1 +1,0 @@
-"""\nModule: chunk\n"""\n\nclass ChunkStub:\n    pass\n\ndef placeholder():\n    pass\n

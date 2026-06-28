@@ -1,1 +1,0 @@
-"""\nModule: ingestion_pipeline\n"""\n\nclass IngestionpipelineStub:\n    pass\n\ndef placeholder():\n    pass\n

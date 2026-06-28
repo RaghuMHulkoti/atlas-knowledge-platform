@@ -1,1 +1,0 @@
-"""\nModule: knowledge\n"""\n\nclass KnowledgeStub:\n    pass\n\ndef placeholder():\n    pass\n

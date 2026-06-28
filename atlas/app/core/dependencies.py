@@ -1,1 +1,0 @@
-"""\nModule: dependencies\n"""\n\nclass DependenciesStub:\n    pass\n\ndef placeholder():\n    pass\n

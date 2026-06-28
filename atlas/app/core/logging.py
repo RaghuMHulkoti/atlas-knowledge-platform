@@ -1,1 +1,0 @@
-"""\nModule: logging\n"""\n\nclass LoggingStub:\n    pass\n\ndef placeholder():\n    pass\n

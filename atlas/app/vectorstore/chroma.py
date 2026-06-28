@@ -1,1 +1,0 @@
-"""\nModule: chroma\n"""\n\nclass ChromaStub:\n    pass\n\ndef placeholder():\n    pass\n

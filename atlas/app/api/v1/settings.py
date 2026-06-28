@@ -1,1 +1,0 @@
-"""\nModule: settings\n"""\n\nclass SettingsStub:\n    pass\n\ndef placeholder():\n    pass\n
