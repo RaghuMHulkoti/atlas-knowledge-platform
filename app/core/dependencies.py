@@ -26,6 +26,7 @@ from app.ai.retrieval.chroma_retriever import ChromaRetriever
 from app.ai.splitters.recursive_splitter import RecursiveSplitter
 from app.core.config import Settings, get_settings
 from app.domain.chat.chat_service import ChatService
+from app.domain.knowledge.jobs import JobStore
 from app.domain.knowledge.services.ingestion_service import IngestionService
 from app.domain.knowledge.services.upload_service import UploadService
 from app.domain.search.search_service import SearchService
@@ -64,6 +65,11 @@ def get_vector_store() -> BaseVectorStore:
 @lru_cache
 def get_conversation_memory() -> ConversationMemory:
     return ConversationMemory()
+
+
+@lru_cache
+def get_job_store() -> JobStore:
+    return JobStore()
 
 
 # ----------------------------------------------------------------------

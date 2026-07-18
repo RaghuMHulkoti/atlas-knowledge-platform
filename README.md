@@ -108,10 +108,11 @@ docker compose up --build       # reads secrets from .env
 
 Base path: `/api/v1`
 
-| Method | Path                  | Description                                       |
-| ------ | --------------------- | ------------------------------------------------- |
-| POST   | `/knowledge/ingest`   | Clone a Git repo and index it                     |
-| POST   | `/knowledge/upload`   | Upload & index a PDF/DOCX/Markdown/text file      |
+| Method | Path                    | Description                                            |
+| ------ | ----------------------- | ------------------------------------------------------ |
+| POST   | `/knowledge/ingest`     | Start a **background** Git-repo ingestion → `202` + job id |
+| GET    | `/knowledge/jobs/{id}`  | Poll ingestion job status / results                    |
+| POST   | `/knowledge/upload`     | Upload & index a PDF/DOCX/Markdown/text file (sync)    |
 | POST   | `/search`             | Semantic search over indexed knowledge            |
 | POST   | `/chat`               | Grounded, cited answer (RAG)                      |
 | POST   | `/chat/stream`        | Streaming answer (`text/plain`)                   |
@@ -124,10 +125,14 @@ Base path: `/api/v1`
 ### Examples
 
 ```bash
-# Ingest a repository
+# Ingest a repository (returns 202 + a job id immediately)
 curl -X POST http://localhost:8000/api/v1/knowledge/ingest \
   -H 'Content-Type: application/json' \
   -d '{"repository_url": "https://github.com/octocat/Spoon-Knife.git"}'
+# -> {"job_id":"abc123","status":"pending","status_url":"/api/v1/knowledge/jobs/abc123", ...}
+
+# Poll the job until status is "completed" (or "failed")
+curl http://localhost:8000/api/v1/knowledge/jobs/abc123
 
 # Upload a document
 curl -X POST http://localhost:8000/api/v1/knowledge/upload \
@@ -193,7 +198,10 @@ is what makes retrieval work.
 ### 1. Ingestion & Indexing (write path)
 
 Triggered by `POST /knowledge/ingest` (a Git repo) or `POST /knowledge/upload`
-(a file). Orchestrated by the **ingestion LangGraph workflow**
+(a file). Repo ingestion runs **in the background** — the endpoint returns a job
+id (`202`) immediately and you poll `GET /knowledge/jobs/{id}`, so a large repo
+never holds the HTTP request open long enough to hit a gateway timeout.
+Orchestrated by the **ingestion LangGraph workflow**
 (`app/workflows/ingestion_workflow.py`).
 
 ```
