@@ -15,7 +15,6 @@ dedicated collaborator. New steps can be inserted without modifying this class.
 """
 
 import time
-import uuid
 
 from langchain_core.documents import Document
 
@@ -63,12 +62,19 @@ class IndexingPipeline:
         self._vector_store = vector_store
         self._collection_name = collection_name or settings.DEFAULT_COLLECTION
 
-    async def run(self, documents: list[KnowledgeDocument]) -> int:
+    async def run(
+        self,
+        documents: list[KnowledgeDocument],
+        collection_name: str | None = None,
+    ) -> int:
         """
         Run the full indexing pipeline for a batch of KnowledgeDocuments.
 
         Args:
-            documents: Raw domain documents from the ingestion pipeline.
+            documents:       Raw domain documents from the ingestion pipeline.
+            collection_name: Optional override for the target collection.
+                             Defaults to the collection this pipeline was
+                             constructed with.
 
         Returns:
             Total number of chunks stored in the vector store.
@@ -76,6 +82,8 @@ class IndexingPipeline:
         Raises:
             IndexingException: If any pipeline stage fails.
         """
+        collection = collection_name or self._collection_name
+
         if not documents:
             logger.info("IndexingPipeline: no documents to index.")
             return 0
@@ -112,7 +120,7 @@ class IndexingPipeline:
             # ── Stage 4: Upsert into vector store ──
             ids, texts, metas = self._prepare_upsert_payload(chunks)
             self._vector_store.upsert(
-                collection_name=self._collection_name,
+                collection_name=collection,
                 ids=ids,
                 documents=texts,
                 embeddings=embeddings,
@@ -129,7 +137,7 @@ class IndexingPipeline:
         logger.info(
             "IndexingPipeline: complete — %d vector(s) stored in '%s' (%.2fs).",
             len(chunks),
-            self._collection_name,
+            collection,
             elapsed,
         )
 
@@ -142,8 +150,10 @@ class IndexingPipeline:
         """
         Build the parallel arrays required by BaseVectorStore.upsert().
 
-        Each chunk ID is derived from its parent document ID + a UUID suffix
-        so that re-chunking produces stable, non-colliding IDs.
+        Each chunk ID is derived deterministically from its parent document ID
+        plus a per-parent ordinal, so re-ingesting the same document overwrites
+        its existing chunks instead of appending duplicates. Idempotent
+        re-ingestion is a documented guarantee of the platform.
 
         Returns:
             (ids, texts, metadatas) — all lists of equal length.
@@ -152,9 +162,14 @@ class IndexingPipeline:
         texts: list[str] = []
         metadatas: list[dict] = []
 
+        # Ordinal per parent document → stable chunk ids across re-ingestion.
+        ordinal: dict[str, int] = {}
+
         for chunk in chunks:
             parent_id = chunk.metadata.get("id", "")
-            chunk_id = f"{parent_id}_{uuid.uuid4().hex[:8]}"
+            index = ordinal.get(parent_id, 0)
+            ordinal[parent_id] = index + 1
+            chunk_id = f"{parent_id}_{index}"
 
             ids.append(chunk_id)
             texts.append(chunk.page_content)

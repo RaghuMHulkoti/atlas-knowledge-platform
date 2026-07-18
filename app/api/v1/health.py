@@ -1,10 +1,23 @@
 from fastapi import APIRouter
 
 from app.core.config import settings
-from app.core.dependencies import get_llm, get_vector_store
 from app.core.constants import HealthStatus
+from app.core.dependencies import get_llm, get_vector_store
+from app.observability.metrics import metrics
 
 router = APIRouter()
+
+
+@router.get("/live")
+async def liveness() -> dict:
+    """Liveness probe — the process is up. No dependency checks."""
+    return {"status": HealthStatus.UP}
+
+
+@router.get("/metrics")
+async def get_metrics() -> dict:
+    """Return in-process counters and gauges."""
+    return metrics.snapshot()
 
 
 @router.get("/")

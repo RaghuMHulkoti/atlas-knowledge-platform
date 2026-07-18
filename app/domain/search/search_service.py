@@ -1,117 +1,62 @@
-from functools import lru_cache
-from pathlib import Path
+"""
+search_service.py
 
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+Semantic search over indexed knowledge.
+
+Thin domain facade over the search LangGraph workflow. Retrieval and result
+shaping happen inside the workflow's nodes; this service exposes a simple async
+``search`` method and returns the ranked SearchResult objects.
+"""
+
+from app.ai.retrieval.base import BaseRetriever
+from app.core.config import settings
+from app.core.logging import get_logger
+from app.domain.search.models import SearchResult
+from app.workflows.search_workflow import SearchWorkflow
+
+logger = get_logger(__name__)
+
+# Re-exported for backwards compatibility with existing imports.
+__all__ = ["SearchResult", "SearchService"]
 
 
-class Settings(BaseSettings):
+class SearchService:
     """
-    Application configuration.
+    Executes semantic search via the SearchWorkflow.
 
-    Values are loaded in the following order:
-    1. Environment Variables
-    2. .env file
-    3. Default values
+    Responsibilities:
+    - Run the search workflow and return its ranked SearchResult objects.
+
+    Non-responsibilities:
+    - Embedding / vector store details (retriever, inside the workflow).
+    - Answer generation (ChatService).
     """
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore",
-    )
+    def __init__(self, retriever: BaseRetriever) -> None:
+        self._workflow = SearchWorkflow(retriever=retriever)
 
-    # ------------------------------------------------------------------
-    # Application
-    # ------------------------------------------------------------------
+    async def search(
+        self,
+        query: str,
+        k: int | None = None,
+        where: dict | None = None,
+    ) -> list[SearchResult]:
+        """
+        Run a semantic search.
 
-    APP_NAME: str = "Atlas"
-    APP_VERSION: str = "0.1.0"
-    APP_DESCRIPTION: str = "Enterprise Engineering Knowledge Platform"
+        Args:
+            query: Natural-language query.
+            k:     Maximum number of results (defaults to RETRIEVAL_TOP_K).
+            where: Optional metadata filter.
 
-    ENVIRONMENT: str = Field(default="development")
-    DEBUG: bool = Field(default=True)
+        Returns:
+            Ranked list of SearchResult, most relevant first.
+        """
+        top_k = k or settings.RETRIEVAL_TOP_K
+        logger.info("SearchService: query=%r k=%d", query[:80], top_k)
 
-    # ------------------------------------------------------------------
-    # API
-    # ------------------------------------------------------------------
+        state = await self._workflow.run(query=query, k=top_k, where=where)
+        results = state.get("results", [])
 
-    API_V1_PREFIX: str = "/api/v1"
-
-    # ------------------------------------------------------------------
-    # Logging
-    # ------------------------------------------------------------------
-
-    LOG_LEVEL: str = "INFO"
-
-    # ------------------------------------------------------------------
-    # ------------------------------------------------------------------
-    # ChromaDB
-    # ------------------------------------------------------------------
-
-    CHROMA_PATH: str = "./storage/chroma"
-
-    DEFAULT_COLLECTION: str = "atlas"
-
-    # ------------------------------------------------------------------
-    # Uploads
-    # ------------------------------------------------------------------
-
-    UPLOAD_DIRECTORY: str = "./storage/uploads"
-
-    MAX_UPLOAD_SIZE_MB: int = 100
-
-    # ------------------------------------------------------------------
-    # Git
-    # ------------------------------------------------------------------
-
-    REPOSITORY_DIRECTORY: str = "./storage/repositories"
-
-    # ------------------------------------------------------------------
-    # Chunking
-    # ------------------------------------------------------------------
-
-    CHUNK_SIZE: int = 1000
-
-    CHUNK_OVERLAP: int = 200
-
-    # ------------------------------------------------------------------
-    # Embeddings
-    # ------------------------------------------------------------------
-
-    EMBEDDING_MODEL: str = "models/text-embedding-004"
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
-    @property
-    def project_root(self) -> Path:
-        return Path(__file__).resolve().parents[2]
-
-    @property
-    def upload_path(self) -> Path:
-        return self.project_root / "storage" / "uploads"
-
-    @property
-    def repository_path(self) -> Path:
-        return self.project_root / "storage" / "repositories"
-
-    @property
-    def chroma_path(self) -> Path:
-        return self.project_root / "storage" / "chroma"
-
-
-@lru_cache
-def get_settings() -> Settings:
-    """
-    Returns a singleton Settings instance.
-
-    Using lru_cache ensures the configuration is loaded
-    only once during the application's lifetime.
-    """
-    return Settings()
-
-
-settings = get_settings()
+        logger.info("SearchService: returning %d result(s).", len(results))
+        return results

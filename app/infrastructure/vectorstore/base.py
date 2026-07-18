@@ -49,3 +49,30 @@ class BaseVectorStore(ABC):
             metadatas:       Metadata dict per document/chunk.
         """
         pass
+
+    @abstractmethod
+    def query(
+        self,
+        collection_name: str,
+        query_embedding: list[float],
+        k: int,
+        where: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Return the *k* nearest chunks to a pre-computed query embedding.
+
+        Embeddings are computed client-side (same as ``upsert``); the query
+        vector must have the same dimensionality as the stored vectors.
+
+        Args:
+            collection_name: Collection to search.
+            query_embedding: Dense query vector.
+            k:               Maximum number of results to return.
+            where:           Optional ChromaDB metadata filter.
+
+        Returns:
+            A list of result dicts, nearest first, each shaped as::
+
+                {"id": str, "document": str, "metadata": dict, "distance": float}
+        """
+        pass

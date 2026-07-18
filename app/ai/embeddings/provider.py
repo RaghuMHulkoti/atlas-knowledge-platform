@@ -27,12 +27,18 @@ class GoogleEmbeddingProvider(BaseEmbeddingProvider):
     """
 
     def __init__(self) -> None:
+        google_api_key = (
+            settings.GOOGLE_API_KEY.get_secret_value()
+            if settings.GOOGLE_API_KEY is not None
+            else None
+        )
         self._model = GoogleGenerativeAIEmbeddings(
-            model=settings.EMBEDDING_MODEL,
+            model=settings.GOOGLE_EMBEDDING_MODEL,
+            google_api_key=google_api_key,
         )
         logger.info(
             "GoogleEmbeddingProvider initialised with model: %s",
-            settings.EMBEDDING_MODEL,
+            settings.GOOGLE_EMBEDDING_MODEL,
         )
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:

@@ -125,7 +125,35 @@ class Settings(BaseSettings):
     # Embeddings
     # ------------------------------------------------------------------
 
-    EMBEDDING_MODEL: str = "models/text-embedding-004"
+    # Which embedding backend to use:
+    #   "local"  -> on-device sentence-transformers model (no API key, default)
+    #   "google" -> Google Generative AI embeddings (requires GOOGLE_API_KEY)
+    EMBEDDING_PROVIDER: str = "local"
+
+    # HuggingFace model id used by the "local" provider (via sentence-transformers).
+    # BAAI/bge-large-en-v1.5 produces 1024-dim vectors. Changing this changes the
+    # embedding dimension — recreate any existing collection when you switch.
+    EMBEDDING_MODEL: str = "BAAI/bge-large-en-v1.5"
+
+    # Instruction prepended to queries (not documents) for BGE-style retrieval.
+    # Set to "" to disable. Ignored by non-BGE models.
+    EMBEDDING_QUERY_INSTRUCTION: str = (
+        "Represent this sentence for searching relevant passages: "
+    )
+
+    # Model name used by the "google" provider.
+    GOOGLE_EMBEDDING_MODEL: str = "models/text-embedding-004"
+
+    # API key for the "google" provider. Optional — only required when
+    # EMBEDDING_PROVIDER is set to "google".
+    GOOGLE_API_KEY: SecretStr | None = None
+
+    # ------------------------------------------------------------------
+    # Retrieval
+    # ------------------------------------------------------------------
+
+    # Default number of chunks returned by semantic retrieval.
+    RETRIEVAL_TOP_K: int = 5
 
     # ------------------------------------------------------------------
     # Project Paths

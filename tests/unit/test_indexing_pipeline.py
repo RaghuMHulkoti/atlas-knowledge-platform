@@ -102,6 +102,18 @@ class TestIndexingPipeline:
         assert ids[0].startswith("parent1_")
         assert ids[1].startswith("parent1_")
 
+    def test_prepare_upsert_payload_ids_are_deterministic(self):
+        """Re-chunking the same document yields the same chunk ids (idempotent)."""
+        chunks = [
+            Document(page_content="p1", metadata={"id": "parent1"}),
+            Document(page_content="p2", metadata={"id": "parent1"}),
+            Document(page_content="q1", metadata={"id": "parent2"}),
+        ]
+        ids_a, _, _ = IndexingPipeline._prepare_upsert_payload(chunks)
+        ids_b, _, _ = IndexingPipeline._prepare_upsert_payload(chunks)
+
+        assert ids_a == ids_b == ["parent1_0", "parent1_1", "parent2_0"]
+
     def test_prepare_upsert_payload_cleans_metadata(self):
         chunks = [
             Document(

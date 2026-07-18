@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import AsyncIterator, Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
@@ -124,6 +124,24 @@ class OpenRouterLLM(BaseLLM):
         )
 
         return str(response.content)
+
+    async def stream_messages(
+        self,
+        messages: Sequence[BaseMessage],
+        **kwargs,
+    ) -> AsyncIterator[str]:
+        """
+        Stream a response from a conversation, one text token at a time.
+
+        Uses only the primary model (no mid-stream failover, since tokens may
+        already have been emitted). Falls back to the primary model's astream.
+        """
+        llm = self._get_model(settings.LLM_PRIMARY_MODEL)
+
+        async for chunk in llm.astream(messages, **kwargs):
+            content = getattr(chunk, "content", "")
+            if content:
+                yield str(content)
 
     def count_tokens(
         self,
