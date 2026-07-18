@@ -134,18 +134,22 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 200
 
     # ------------------------------------------------------------------
-    # Embeddings — Google Generative AI (Gemini)
+    # Embeddings
     # ------------------------------------------------------------------
 
-    # Embedding backend. Currently only "google" is supported.
-    EMBEDDING_PROVIDER: str = "google"
+    # Which embedding backend to use:
+    #   "local"  -> on-device ONNX MiniLM (384-dim). Free, no key, no quota,
+    #               no rate limit. Default.
+    #   "google" -> Google Gemini embeddings (requires GOOGLE_API_KEY; the free
+    #               tier is capped at 100 embed requests/minute).
+    EMBEDDING_PROVIDER: str = "local"
 
-    # Google Gemini embedding model. gemini-embedding-001 -> 3072-dim vectors.
-    # Changing this changes the embedding dimension — recreate any existing
-    # collection when you switch.
+    # Google Gemini embedding model (only used when EMBEDDING_PROVIDER=google).
+    # gemini-embedding-001 -> 3072-dim vectors. Changing the provider/model
+    # changes the dimension — recreate any existing collection when you switch.
     GOOGLE_EMBEDDING_MODEL: str = "models/gemini-embedding-001"
 
-    # API key for Google Generative AI. Required.
+    # API key for Google Generative AI. Required only for EMBEDDING_PROVIDER=google.
     GOOGLE_API_KEY: SecretStr | None = None
 
     # ------------------------------------------------------------------

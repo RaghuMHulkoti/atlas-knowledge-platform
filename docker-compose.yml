@@ -18,6 +18,8 @@ services:
     volumes:
       # Persist cloned repositories and uploads across container restarts.
       - atlas-storage:/app/storage
+      # Cache the on-device embedding model so it is downloaded only once.
+      - atlas-model-cache:/root/.cache/chroma
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health/"]
@@ -28,3 +30,4 @@ services:
 
 volumes:
   atlas-storage:
+  atlas-model-cache:

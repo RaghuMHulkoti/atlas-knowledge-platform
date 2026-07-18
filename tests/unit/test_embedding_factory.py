@@ -36,3 +36,20 @@ def test_google_provider_is_selected(monkeypatch):
     provider = ef.EmbeddingFactory.create("google")
     assert created.get("yes") is True
     assert isinstance(provider, _FakeGoogle)
+
+
+def test_local_provider_is_selected(monkeypatch):
+    """create('local') builds a LocalEmbeddingProvider without hitting network."""
+    created = {}
+
+    class _FakeLocal:
+        def __init__(self):
+            created["yes"] = True
+
+    import app.ai.embeddings.local_provider as lp
+
+    monkeypatch.setattr(lp, "LocalEmbeddingProvider", _FakeLocal)
+
+    provider = ef.EmbeddingFactory.create("local")
+    assert created.get("yes") is True
+    assert isinstance(provider, _FakeLocal)

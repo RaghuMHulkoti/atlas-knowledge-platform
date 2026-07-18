@@ -39,7 +39,7 @@
 {"type":"rectangle","id":"chroma","x":90,"y":660,"width":260,"height":78,"backgroundColor":"#a5d8ff","fillStyle":"solid","strokeColor":"#4a9eed","roundness":{"type":3}},
 {"type":"text","id":"t_chroma","x":105,"y":680,"width":230,"text":"Chroma Cloud\nvector store (chunks+meta)","fontSize":14,"textAlign":"center","strokeColor":"#1e1e1e"},
 {"type":"rectangle","id":"emb","x":400,"y":660,"width":260,"height":78,"backgroundColor":"#c3fae8","fillStyle":"solid","strokeColor":"#06b6d4","roundness":{"type":3}},
-{"type":"text","id":"t_emb","x":415,"y":680,"width":230,"text":"Embeddings\ngemini-embedding-001 (Google)","fontSize":13,"textAlign":"center","strokeColor":"#1e1e1e"},
+{"type":"text","id":"t_emb","x":415,"y":680,"width":230,"text":"Embeddings\nMiniLM 384-dim (local)","fontSize":14,"textAlign":"center","strokeColor":"#1e1e1e"},
 {"type":"rectangle","id":"openr","x":710,"y":660,"width":280,"height":78,"backgroundColor":"#ffd8a8","fillStyle":"solid","strokeColor":"#f59e0b","roundness":{"type":3}},
 {"type":"text","id":"t_openr","x":725,"y":680,"width":250,"text":"OpenRouter LLM\nllama-3.3-70b + fallbacks","fontSize":14,"textAlign":"center","strokeColor":"#1e1e1e"},
 {"type":"arrow","id":"a_index_chroma","x":150,"y":602,"width":40,"height":58,"points":[[0,0],[40,58]],"endArrowhead":"arrow","strokeColor":"#15803d"},

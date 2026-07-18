@@ -22,6 +22,7 @@ class EmbeddingFactory:
     Creates a BaseEmbeddingProvider from application settings.
 
     Supported providers:
+    - "local"  -> LocalEmbeddingProvider  (on-device MiniLM; free, no API key)
     - "google" -> GoogleEmbeddingProvider (Gemini; requires GOOGLE_API_KEY)
     """
 
@@ -33,9 +34,16 @@ class EmbeddingFactory:
 
         Raises:
             IndexingException: If the provider name is not recognised, or the
-                required GOOGLE_API_KEY is missing.
+                "google" provider is selected without a GOOGLE_API_KEY.
         """
         name = (provider or settings.EMBEDDING_PROVIDER).strip().lower()
+
+        if name == "local":
+            # Imported lazily so the onnxruntime model is only loaded when the
+            # local provider is actually selected.
+            from app.ai.embeddings.local_provider import LocalEmbeddingProvider
+
+            return LocalEmbeddingProvider()
 
         if name == "google":
             if settings.GOOGLE_API_KEY is None:
@@ -47,5 +55,5 @@ class EmbeddingFactory:
             return GoogleEmbeddingProvider()
 
         raise IndexingException(
-            f"Unknown EMBEDDING_PROVIDER '{name}'. Expected 'google'."
+            f"Unknown EMBEDDING_PROVIDER '{name}'. Expected 'local' or 'google'."
         )
