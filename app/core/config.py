@@ -62,7 +62,19 @@ class Settings(BaseSettings):
 
     LLM_PRIMARY_MODEL: str = "meta-llama/llama-3.3-70b-instruct:free"
 
-    LLM_FALLBACK_MODELS: str = "openai/gpt-oss-120b:free"
+    # Fallbacks tried in order when the primary fails/rate-limits. Includes
+    # 'openrouter/free', which auto-routes to whatever free model is currently
+    # available — a strong safety net when specific models are rate-limited.
+    LLM_FALLBACK_MODELS: str = (
+        "openrouter/free,"
+        "openai/gpt-oss-20b:free,"
+        "qwen/qwen3-next-80b-a3b-instruct:free"
+    )
+
+    # Per-request timeout for a single LLM call (seconds). Failover across the
+    # configured models must stay well under any gateway timeout, so keep this
+    # low enough that a slow/queued free model is abandoned quickly.
+    LLM_REQUEST_TIMEOUT_SECONDS: float = 20.0
 
     @property
     def fallback_models(self) -> list[str]:

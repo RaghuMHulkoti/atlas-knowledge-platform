@@ -46,6 +46,11 @@ class OpenRouterLLM(BaseLLM):
                 api_key=settings.OPENROUTER_API_KEY.get_secret_value(),
                 base_url=settings.OPENROUTER_BASE_URL,
                 temperature=0,
+                # Fail fast: on a 429/5xx do NOT retry this model with backoff
+                # (a rate-limited free model returns a long Retry-After). We want
+                # to fall over to the next configured model immediately instead.
+                max_retries=0,
+                timeout=settings.LLM_REQUEST_TIMEOUT_SECONDS,
             )
 
         return self._models[model_name]
