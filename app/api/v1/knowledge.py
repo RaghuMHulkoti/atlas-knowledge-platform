@@ -17,7 +17,6 @@ from fastapi import (
     BackgroundTasks,
     Depends,
     File,
-    Form,
     HTTPException,
     UploadFile,
 )
@@ -44,10 +43,6 @@ router = APIRouter()
 
 class IngestRequest(BaseModel):
     repository_url: HttpUrl = Field(description="HTTPS Git URL to ingest.")
-    collection: str | None = Field(
-        default=None,
-        description="Target collection name (defaults to the configured default).",
-    )
 
 
 class IngestJobResponse(BaseModel):
@@ -108,8 +103,11 @@ async def ingest_repository(
     Returns immediately with a job id (HTTP 202). The repository is cloned,
     parsed, chunked, embedded, and stored asynchronously; poll the returned
     ``status_url`` (GET /knowledge/jobs/{id}) for progress and final counts.
+
+    Everything is indexed into the single default collection
+    (``settings.DEFAULT_COLLECTION``) so all knowledge lives in one place.
     """
-    collection = request.collection or settings.DEFAULT_COLLECTION
+    collection = settings.DEFAULT_COLLECTION
     url = str(request.repository_url)
 
     job = job_store.create(repository_url=url, collection=collection)
@@ -156,14 +154,15 @@ async def upload_document(
     upload_service: Annotated[UploadService, Depends(get_upload_service)],
     indexing_pipeline: Annotated[IndexingPipeline, Depends(get_indexing_pipeline)],
     file: Annotated[UploadFile, File(description="Document to index.")],
-    collection: Annotated[str | None, Form()] = None,
 ) -> UploadResponse:
     """
     Upload a single document (PDF, DOCX, Markdown, or plain text), extract its
     text, then chunk, embed, and store it so it becomes searchable and
     chat-able.
+
+    Indexed into the single default collection (``settings.DEFAULT_COLLECTION``).
     """
-    target_collection = collection or settings.DEFAULT_COLLECTION
+    target_collection = settings.DEFAULT_COLLECTION
     filename = file.filename or "upload"
 
     data = await file.read()

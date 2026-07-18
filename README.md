@@ -53,7 +53,7 @@ plug together behind interfaces.
 | **Orchestration**| **LangGraph**                      | Expresses ingestion, search, and chat as explicit state-machine graphs — each step is a node with typed state.  |
 | **RAG toolkit**  | **LangChain**                      | Provides the `Document` type, the `RecursiveCharacterTextSplitter` (chunking), chat message types, and the LLM/embeddings client integrations. |
 | **LLM gateway**  | **OpenRouter** (via `langchain-openai` `ChatOpenAI`) | One API to many models; Atlas adds primary→fallback failover on top.                             |
-| **Embeddings**   | **ONNX MiniLM** (local, default) / Google Gemini | Turns text into vectors. Default runs `all-MiniLM-L6-v2` (384-dim) on-device via onnxruntime — free, no key, no quota. Gemini optional. |
+| **Embeddings**   | **ONNX MiniLM** (local)            | Turns text into vectors. Runs `all-MiniLM-L6-v2` (384-dim) on-device via onnxruntime — free, no key, no quota, no rate limit. |
 | **Vector store** | **ChromaDB** (Chroma Cloud)        | Stores chunk vectors + metadata; performs nearest-neighbour similarity search. The system of record for chunks. |
 | **Git ingestion**| **GitPython**                      | Clones / pulls repositories to local disk for the Git connector.                                                |
 | **File parsing** | **pypdf** / **python-docx**        | Extract plain text from uploaded PDF and DOCX documents.                                                        |
@@ -76,10 +76,9 @@ plug together behind interfaces.
 - An [OpenRouter](https://openrouter.ai/keys) API key (for chat)
 - A [Chroma Cloud](https://www.trychroma.com/) database (api key, tenant, database)
 
-> Embeddings run **on-device by default** (no key, no quota). The first run
-> downloads the ~80 MB MiniLM ONNX model to a local cache. To use Google Gemini
-> embeddings instead, set `EMBEDDING_PROVIDER=google` + `GOOGLE_API_KEY` (note:
-> the Gemini free tier caps embeddings at 100 requests/minute).
+> Embeddings run **on-device** (no key, no quota). The first run downloads the
+> ~80 MB MiniLM ONNX model to a local cache (it is also baked into the Docker
+> image at build time).
 
 ### Setup
 
@@ -157,7 +156,7 @@ curl http://localhost:8000/api/v1/knowledge/jobs/abc123
 
 # Upload a document
 curl -X POST http://localhost:8000/api/v1/knowledge/upload \
-  -F 'file=@runbook.md' -F 'collection=atlas'
+  -F 'file=@runbook.md'
 
 # Search
 curl -X POST http://localhost:8000/api/v1/search \

@@ -31,11 +31,8 @@ async def get_runtime_settings() -> dict:
         },
         "embeddings": {
             "provider": settings.EMBEDDING_PROVIDER,
-            "model": (
-                settings.GOOGLE_EMBEDDING_MODEL
-                if settings.EMBEDDING_PROVIDER == "google"
-                else "all-MiniLM-L6-v2"
-            ),
+            "model": "all-MiniLM-L6-v2",
+            "batch_size": settings.EMBEDDING_BATCH_SIZE,
         },
         "vector_store": {
             "type": "chroma-cloud",

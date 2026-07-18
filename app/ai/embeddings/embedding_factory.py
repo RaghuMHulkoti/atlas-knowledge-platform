@@ -6,7 +6,8 @@ Constructs the configured embedding provider.
 Selects the concrete BaseEmbeddingProvider implementation based on the
 EMBEDDING_PROVIDER application setting. This is the single place that decides
 which embedding backend the platform uses — no other module names a concrete
-provider.
+provider. To add a hosted backend, implement BaseEmbeddingProvider and add a
+branch here.
 """
 
 from app.ai.embeddings.base import BaseEmbeddingProvider
@@ -22,8 +23,7 @@ class EmbeddingFactory:
     Creates a BaseEmbeddingProvider from application settings.
 
     Supported providers:
-    - "local"  -> LocalEmbeddingProvider  (on-device MiniLM; free, no API key)
-    - "google" -> GoogleEmbeddingProvider (Gemini; requires GOOGLE_API_KEY)
+    - "local" -> LocalEmbeddingProvider (on-device MiniLM; free, no API key)
     """
 
     @classmethod
@@ -33,8 +33,7 @@ class EmbeddingFactory:
         EMBEDDING_PROVIDER setting).
 
         Raises:
-            IndexingException: If the provider name is not recognised, or the
-                "google" provider is selected without a GOOGLE_API_KEY.
+            IndexingException: If the provider name is not recognised.
         """
         name = (provider or settings.EMBEDDING_PROVIDER).strip().lower()
 
@@ -45,15 +44,6 @@ class EmbeddingFactory:
 
             return LocalEmbeddingProvider()
 
-        if name == "google":
-            if settings.GOOGLE_API_KEY is None:
-                raise IndexingException(
-                    "EMBEDDING_PROVIDER='google' requires GOOGLE_API_KEY to be set."
-                )
-            from app.ai.embeddings.provider import GoogleEmbeddingProvider
-
-            return GoogleEmbeddingProvider()
-
         raise IndexingException(
-            f"Unknown EMBEDDING_PROVIDER '{name}'. Expected 'local' or 'google'."
+            f"Unknown EMBEDDING_PROVIDER '{name}'. Expected 'local'."
         )

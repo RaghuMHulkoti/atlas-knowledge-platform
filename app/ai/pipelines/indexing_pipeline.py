@@ -111,20 +111,34 @@ class IndexingPipeline:
             )
 
             # ── Stage 3: Generate embeddings ──
+            embed_start = time.perf_counter()
             embeddings = self._embedding_service.embed(chunks)
+            embed_elapsed = time.perf_counter() - embed_start
             logger.info(
-                "IndexingPipeline: stage 3 complete — %d embedding(s) generated.",
+                "IndexingPipeline: stage 3 complete — %d embedding(s) generated "
+                "in %.2fs (%.1f ms/chunk).",
                 len(embeddings),
+                embed_elapsed,
+                (embed_elapsed * 1000 / len(chunks)) if chunks else 0.0,
             )
 
-            # ── Stage 4: Upsert into vector store ──
+            # ── Stage 4: Upsert into vector store (ChromaDB write) ──
             ids, texts, metas = self._prepare_upsert_payload(chunks)
+            upsert_start = time.perf_counter()
             self._vector_store.upsert(
                 collection_name=collection,
                 ids=ids,
                 documents=texts,
                 embeddings=embeddings,
                 metadatas=metas,
+            )
+            upsert_elapsed = time.perf_counter() - upsert_start
+            logger.info(
+                "IndexingPipeline: stage 4 complete — %d vector(s) written to "
+                "ChromaDB collection '%s' in %.2fs.",
+                len(ids),
+                collection,
+                upsert_elapsed,
             )
 
         except IndexingException:
@@ -135,10 +149,13 @@ class IndexingPipeline:
         elapsed = time.perf_counter() - start
 
         logger.info(
-            "IndexingPipeline: complete — %d vector(s) stored in '%s' (%.2fs).",
+            "IndexingPipeline: complete — %d vector(s) stored in '%s' "
+            "(total %.2fs | embed %.2fs | chroma-write %.2fs).",
             len(chunks),
             collection,
             elapsed,
+            embed_elapsed,
+            upsert_elapsed,
         )
 
         return len(chunks)
