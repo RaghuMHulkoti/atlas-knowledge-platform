@@ -56,7 +56,8 @@ async def test_retrieve_maps_results_to_documents():
     assert doc.page_content == "hello world"
     assert doc.metadata["chunk_id"] == "chunk-1"
     assert doc.metadata["distance"] == 0.25
-    assert doc.metadata["score"] == pytest.approx(0.75)
+    # score = 1 / (1 + distance) = 1 / 1.25 = 0.8
+    assert doc.metadata["score"] == pytest.approx(0.8)
     assert store.last_call["collection_name"] == "atlas"
     assert store.last_call["k"] == 3
 

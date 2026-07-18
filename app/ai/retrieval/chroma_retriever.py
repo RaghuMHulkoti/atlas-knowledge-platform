@@ -113,7 +113,14 @@ class ChromaRetriever(BaseRetriever):
 
 
 def _to_score(distance: float | None) -> float | None:
-    """Convert a distance into a monotonic relevance score (higher = better)."""
+    """
+    Convert a vector distance into a relevance score in (0, 1], higher = better.
+
+    Uses ``1 / (1 + distance)`` so the score is always positive and monotonic in
+    distance, regardless of the vector space's distance scale. (The previous
+    ``1 - distance`` went negative for L2 distances > 1, which is every MiniLM
+    result, and made score-thresholding clients drop all hits.)
+    """
     if distance is None:
         return None
-    return round(1.0 - float(distance), 6)
+    return round(1.0 / (1.0 + float(distance)), 6)
