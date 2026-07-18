@@ -152,6 +152,11 @@ class Settings(BaseSettings):
     # API key for Google Generative AI. Required only for EMBEDDING_PROVIDER=google.
     GOOGLE_API_KEY: SecretStr | None = None
 
+    # Chunks are embedded in batches of this size. Smaller batches sharply lower
+    # peak memory (embedding a whole repo at once can spike memory enough to be
+    # OOM-killed in a memory-limited container). Raise only if you have headroom.
+    EMBEDDING_BATCH_SIZE: int = 16
+
     # ------------------------------------------------------------------
     # Retrieval
     # ------------------------------------------------------------------

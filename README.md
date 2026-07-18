@@ -102,6 +102,27 @@ Open the interactive API docs at **http://localhost:8000/docs**.
 docker compose up --build       # reads secrets from .env
 ```
 
+### Resource requirements (Kubernetes / any orchestrator)
+
+The local embedding model (onnxruntime) makes this a memory-sensitive service.
+Baseline is ~350 MB; embedding spikes above that. **Give the container at least
+1 GiB** or it will be OOM-killed mid-ingest. Point probes at the fast
+`/health/live` (liveness/readiness) — **not** `/health/` (which calls the LLM).
+
+```yaml
+resources:
+  requests: { cpu: "500m", memory: "512Mi" }
+  limits:   { cpu: "1",    memory: "1Gi" }
+livenessProbe:
+  httpGet: { path: /api/v1/health/live, port: 8000 }
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  failureThreshold: 3
+readinessProbe:
+  httpGet: { path: /api/v1/health/live, port: 8000 }
+  initialDelaySeconds: 15
+```
+
 ---
 
 ## API

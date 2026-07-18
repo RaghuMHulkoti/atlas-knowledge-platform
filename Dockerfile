@@ -21,6 +21,9 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=0 \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    # Keep onnxruntime single-threaded: in a CPU-limited container this avoids
+    # thread oversubscription (CPU throttling) and lowers memory overhead.
+    OMP_NUM_THREADS=1 \
     PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
