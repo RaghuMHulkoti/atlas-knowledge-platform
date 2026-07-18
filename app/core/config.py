@@ -122,30 +122,18 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 200
 
     # ------------------------------------------------------------------
-    # Embeddings
+    # Embeddings — Google Generative AI (Gemini)
     # ------------------------------------------------------------------
 
-    # Which embedding backend to use:
-    #   "local"  -> on-device sentence-transformers model (no API key, default)
-    #   "google" -> Google Generative AI embeddings (requires GOOGLE_API_KEY)
-    EMBEDDING_PROVIDER: str = "local"
+    # Embedding backend. Currently only "google" is supported.
+    EMBEDDING_PROVIDER: str = "google"
 
-    # HuggingFace model id used by the "local" provider (via sentence-transformers).
-    # BAAI/bge-large-en-v1.5 produces 1024-dim vectors. Changing this changes the
-    # embedding dimension — recreate any existing collection when you switch.
-    EMBEDDING_MODEL: str = "BAAI/bge-large-en-v1.5"
+    # Google Gemini embedding model. gemini-embedding-001 -> 3072-dim vectors.
+    # Changing this changes the embedding dimension — recreate any existing
+    # collection when you switch.
+    GOOGLE_EMBEDDING_MODEL: str = "models/gemini-embedding-001"
 
-    # Instruction prepended to queries (not documents) for BGE-style retrieval.
-    # Set to "" to disable. Ignored by non-BGE models.
-    EMBEDDING_QUERY_INSTRUCTION: str = (
-        "Represent this sentence for searching relevant passages: "
-    )
-
-    # Model name used by the "google" provider.
-    GOOGLE_EMBEDDING_MODEL: str = "models/text-embedding-004"
-
-    # API key for the "google" provider. Optional — only required when
-    # EMBEDDING_PROVIDER is set to "google".
+    # API key for Google Generative AI. Required.
     GOOGLE_API_KEY: SecretStr | None = None
 
     # ------------------------------------------------------------------

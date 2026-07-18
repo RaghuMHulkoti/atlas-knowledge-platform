@@ -17,19 +17,22 @@ def test_google_without_key_raises(monkeypatch):
         ef.EmbeddingFactory.create("google")
 
 
-def test_local_provider_is_selected(monkeypatch):
-    """create('local') returns a LocalEmbeddingProvider without hitting network."""
+def test_google_provider_is_selected(monkeypatch):
+    """create('google') builds a GoogleEmbeddingProvider without hitting network."""
     created = {}
 
-    class _FakeLocal:
+    class _FakeGoogle:
         def __init__(self):
             created["yes"] = True
 
+    # A key must be present for the google branch to proceed.
+    monkeypatch.setattr(ef.settings, "GOOGLE_API_KEY", "test-key")
+
     # Patch the lazily-imported symbol at its source module.
-    import app.ai.embeddings.local_provider as lp
+    import app.ai.embeddings.provider as gp
 
-    monkeypatch.setattr(lp, "LocalEmbeddingProvider", _FakeLocal)
+    monkeypatch.setattr(gp, "GoogleEmbeddingProvider", _FakeGoogle)
 
-    provider = ef.EmbeddingFactory.create("local")
+    provider = ef.EmbeddingFactory.create("google")
     assert created.get("yes") is True
-    assert isinstance(provider, _FakeLocal)
+    assert isinstance(provider, _FakeGoogle)
