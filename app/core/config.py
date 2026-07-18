@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -144,6 +145,13 @@ class Settings(BaseSettings):
     # OOM-killed in a memory-limited container). Raise only if you have headroom.
     EMBEDDING_BATCH_SIZE: int = 16
 
+    # Number of CPU threads the embedding model may use (onnxruntime + BLAS).
+    # CRITICAL in containers: by default onnxruntime spawns one thread per HOST
+    # core (it cannot see the pod's CPU limit), and those threads thrash against
+    # a throttled CPU allocation — making embedding ~10-20x slower. Pin this to
+    # the pod's CPU-limit cores (e.g. 2 for `limits.cpu: "2"`).
+    EMBEDDING_NUM_THREADS: int = 4
+
     # ------------------------------------------------------------------
     # Retrieval
     # ------------------------------------------------------------------
@@ -184,3 +192,24 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+
+def _pin_math_library_threads() -> None:
+    """
+    Cap the CPU threads NumPy/BLAS spawn, to the configured embedding thread
+    count. Like onnxruntime, OpenBLAS/MKL otherwise default to one thread per
+    HOST core and thrash under a container CPU limit. Must run before NumPy is
+    imported; config is imported early enough for that. ``setdefault`` lets an
+    explicit environment value win.
+    """
+    threads = str(max(1, settings.EMBEDDING_NUM_THREADS))
+    for var in (
+        "OMP_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "NUMEXPR_NUM_THREADS",
+    ):
+        os.environ.setdefault(var, threads)
+
+
+_pin_math_library_threads()

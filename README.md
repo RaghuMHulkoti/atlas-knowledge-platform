@@ -103,15 +103,23 @@ docker compose up --build       # reads secrets from .env
 
 ### Resource requirements (Kubernetes / any orchestrator)
 
-The local embedding model (onnxruntime) makes this a memory-sensitive service.
-Baseline is ~350 MB; embedding spikes above that. **Give the container at least
-1 GiB** or it will be OOM-killed mid-ingest. Point probes at the fast
-`/health/live` (liveness/readiness) — **not** `/health/` (which calls the LLM).
+The local embedding model (onnxruntime) makes this **memory- and CPU-sensitive**:
+
+- **Memory** — baseline ~350 MB; embedding spikes above that. **Give it ≥1 GiB**
+  or it is OOM-killed mid-ingest.
+- **CPU** — embedding is CPU-bound. Give it **≥2 cores**, and set
+  **`EMBEDDING_NUM_THREADS` = the CPU-limit cores**. Otherwise onnxruntime
+  spawns a thread per *host* core and thrashes under the pod's CPU limit, making
+  embedding ~10-20x slower (seconds per chunk).
+
+Point probes at the fast `/health/live` — **not** `/health/` (which calls the LLM).
 
 ```yaml
+env:
+  - { name: EMBEDDING_NUM_THREADS, value: "2" }   # match limits.cpu below
 resources:
-  requests: { cpu: "500m", memory: "512Mi" }
-  limits:   { cpu: "1",    memory: "1Gi" }
+  requests: { cpu: "1",   memory: "512Mi" }
+  limits:   { cpu: "2",   memory: "1Gi" }
 livenessProbe:
   httpGet: { path: /api/v1/health/live, port: 8000 }
   initialDelaySeconds: 20
