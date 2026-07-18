@@ -31,6 +31,14 @@ NO_CONTEXT_MESSAGE = (
     "that. Try ingesting the relevant repository or rephrasing your question."
 )
 
+# Returned when the LLM provider is unavailable (e.g. every free model is rate
+# limited). Kept user-friendly so a streaming client shows a message, not an error.
+LLM_UNAVAILABLE_MESSAGE = (
+    "The language model is temporarily unavailable (the free-tier models are "
+    "rate-limited right now). Please retry in a moment, or add OpenRouter "
+    "credits for reliable responses."
+)
+
 
 def format_context(documents: list[Document]) -> str:
     """

@@ -138,15 +138,42 @@ class OpenRouterLLM(BaseLLM):
         """
         Stream a response from a conversation, one text token at a time.
 
-        Uses only the primary model (no mid-stream failover, since tokens may
-        already have been emitted). Falls back to the primary model's astream.
+        Fails over across the configured models like ``generate`` — but only
+        *before* the first token is emitted. Once a model has streamed any
+        output we cannot switch models (the client already has partial text), so
+        a later failure is raised. A model that fails on connect (e.g. a 429
+        rate limit) is skipped and the next model is tried.
         """
-        llm = self._get_model(settings.LLM_PRIMARY_MODEL)
+        last_exception: Exception | None = None
 
-        async for chunk in llm.astream(messages, **kwargs):
-            content = getattr(chunk, "content", "")
-            if content:
-                yield str(content)
+        for model_name in ModelManager.get_models():
+            llm = self._get_model(model_name)
+            emitted = False
+            try:
+                async for chunk in llm.astream(messages, **kwargs):
+                    content = getattr(chunk, "content", "")
+                    if content:
+                        emitted = True
+                        yield str(content)
+                # Stream finished cleanly.
+                return
+            except Exception as ex:
+                last_exception = ex
+                if emitted:
+                    # Already sent partial output — cannot fail over cleanly.
+                    logger.warning(
+                        "Streaming model %s failed mid-stream; cannot fail over.",
+                        model_name,
+                    )
+                    raise
+                logger.warning(
+                    "Streaming model %s failed before any output. Trying next.",
+                    model_name,
+                )
+
+        raise LLMException(
+            "All configured OpenRouter models failed (streaming)."
+        ) from last_exception
 
     def count_tokens(
         self,

@@ -5,7 +5,11 @@ from langchain_core.documents import Document
 
 from app.ai.generation.citation_builder import CitationBuilder
 from app.ai.generation.response_generator import ResponseGenerator
-from app.ai.prompts.templates import NO_CONTEXT_MESSAGE, format_context
+from app.ai.prompts.templates import (
+    LLM_UNAVAILABLE_MESSAGE,
+    NO_CONTEXT_MESSAGE,
+    format_context,
+)
 
 
 class _CaptureLLM:
@@ -25,6 +29,20 @@ def _doc(text, **meta):
 async def test_generate_returns_no_context_message_when_empty():
     gen = ResponseGenerator(llm=_CaptureLLM())
     assert await gen.generate("q", documents=[]) == NO_CONTEXT_MESSAGE
+
+
+@pytest.mark.anyio
+async def test_stream_yields_message_when_llm_fails_before_output():
+    """A streaming failure before any token yields a friendly message, not an error."""
+
+    class _FailingLLM:
+        async def stream_messages(self, messages, **kwargs):
+            raise RuntimeError("all models down")
+            yield  # pragma: no cover - makes this an async generator
+
+    gen = ResponseGenerator(llm=_FailingLLM())
+    tokens = [t async for t in gen.stream("q", [_doc("ctx", path="a.md")])]
+    assert tokens == [LLM_UNAVAILABLE_MESSAGE]
 
 
 @pytest.mark.anyio

@@ -12,6 +12,7 @@ from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from app.ai.prompts.templates import (
+    LLM_UNAVAILABLE_MESSAGE,
     NO_CONTEXT_MESSAGE,
     RAG_SYSTEM_PROMPT,
     build_rag_user_prompt,
@@ -98,5 +99,15 @@ class ResponseGenerator:
             yield await self._llm.generate_messages(messages)
             return
 
-        async for token in stream_fn(messages):
-            yield token
+        # Stream resiliently: if generation fails before any token is emitted,
+        # yield a friendly message instead of letting the exception break the
+        # already-started HTTP stream (which surfaces as a raw traceback).
+        emitted = False
+        try:
+            async for token in stream_fn(messages):
+                emitted = True
+                yield token
+        except Exception:
+            logger.exception("ResponseGenerator: streaming generation failed.")
+            if not emitted:
+                yield LLM_UNAVAILABLE_MESSAGE
