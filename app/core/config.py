@@ -114,6 +114,18 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 100
 
     # ------------------------------------------------------------------
+    # Git authentication (optional — required only for PRIVATE repositories)
+    # ------------------------------------------------------------------
+
+    # Personal access token used to clone private HTTPS repositories.
+    # For GitHub, create a fine-grained or classic PAT with 'repo' (read) scope.
+    GIT_TOKEN: SecretStr | None = None
+
+    # Optional username to pair with the token. Not needed for GitHub PATs
+    # (the token alone authenticates), but some hosts require it.
+    GIT_USERNAME: str | None = None
+
+    # ------------------------------------------------------------------
     # Chunking
     # ------------------------------------------------------------------
 
