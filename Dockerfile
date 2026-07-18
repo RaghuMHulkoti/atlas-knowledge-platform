@@ -40,12 +40,19 @@ COPY README.md LICENSE ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
-# Storage for cloned repos, uploads, and the local embedding model cache.
+# Storage for cloned repos and uploads.
 RUN mkdir -p storage/repositories storage/uploads
+
+# Pre-download the on-device embedding model (all-MiniLM-L6-v2, ~80 MB) so it is
+# baked into the image. Without this the model downloads on the first ingest
+# request, making that request slow enough to hit a gateway 502.
+RUN python -c "from chromadb.utils import embedding_functions; embedding_functions.DefaultEmbeddingFunction()(['warmup'])"
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+# start-period is generous so the one-time warm-up (model load + Chroma client)
+# finishes before health checks start counting failures.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
     CMD curl -fsS http://localhost:8000/api/v1/health/ || exit 1
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

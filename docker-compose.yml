@@ -26,7 +26,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      # Generous so the one-time startup warm-up finishes before health counts.
+      start_period: 90s
 
 volumes:
   atlas-storage:

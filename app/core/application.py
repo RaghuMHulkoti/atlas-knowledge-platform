@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -14,10 +15,41 @@ from app.middleware.request_id import RequestIDMiddleware
 logger = get_logger(__name__)
 
 
+def _warm_up() -> None:
+    """
+    Load heavy singletons before the app serves traffic.
+
+    Most importantly this downloads/loads the on-device embedding model, so the
+    first ingest request does not pay the one-time ~80 MB download cost (which
+    otherwise makes that request slow enough to hit a gateway 502). Runs at
+    startup; failures are logged but do not prevent the app from starting so the
+    health endpoint stays reachable.
+    """
+    from app.core.dependencies import get_embedding_provider, get_vector_store
+
+    try:
+        logger.info("Warm-up: loading embedding model (one-time download)...")
+        provider = get_embedding_provider()
+        # A real embed forces the model to download and initialise now.
+        provider.embed_query("warmup")
+        logger.info("Warm-up: embedding model ready.")
+    except Exception:
+        logger.exception("Warm-up: embedding model failed to load.")
+
+    try:
+        get_vector_store()
+        logger.info("Warm-up: vector store client ready.")
+    except Exception:
+        logger.exception("Warm-up: vector store initialisation failed.")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
     logger.info("Atlas starting (env=%s).", settings.ENVIRONMENT)
+    # Run the blocking warm-up off the event loop so startup logging still flows.
+    await asyncio.to_thread(_warm_up)
+    logger.info("Atlas warm-up complete — ready to serve.")
     yield
     logger.info("Atlas shutting down.")
 
